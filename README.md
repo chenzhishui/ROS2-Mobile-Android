@@ -20,6 +20,7 @@ This project trying to port ROS-Mobile-Android to ros2
 - [x] switchbutton
 - [ ] touchgoal
 - [x] viz2d
+- [x] xinference
 
 ## How to run
 
