@@ -13,6 +13,7 @@
         <item>RqtPlot</item>
         <item>SwitchButton</item>
         <item>Viz2D</item>
+        <item>Xinference</item>
     </string-array>
 
     <string-array name="layer_names">
@@ -148,6 +149,12 @@
     <!-- Viz2D -->
     <string name="Viz2D_description">
         2D View of multiple layers.
+    </string>
+
+    <!-- Xinference -->
+    <string name="Xinference_description">
+        The Xinference widget displays AI model inference results from a ROS2 topic.
+        It subscribes to a std_msgs/String topic and displays the received text messages.
     </string>
 
 </resources>
