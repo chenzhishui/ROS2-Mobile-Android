@@ -11,6 +11,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -126,14 +127,17 @@ public class WifiSettingsViewModel extends AndroidViewModel {
      * This method attempts connection for older Android versions
      */
     public void connectToWifi(String ssid, String password) {
+        Log.d(TAG, "Attempting to connect to WiFi: " + ssid);
         connectionStatus.postValue(ConnectionStatus.CONNECTING);
 
         // For Android 10+ (API 29+), WiFi connection must be done by the user through system settings
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // On Android 10+, we can suggest a network but cannot connect automatically
+            Log.d(TAG, "Using WifiNetworkSpecifier for Android 10+");
             suggestWifiNetwork(ssid, password);
         } else {
             // For older Android versions, attempt programmatic connection
+            Log.d(TAG, "Using legacy WiFi connection method");
             connectToWifiLegacy(ssid, password);
         }
     }
@@ -159,6 +163,7 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                 @Override
                 public void onAvailable(@NonNull Network network) {
                     super.onAvailable(network);
+                    Log.d(TAG, "WiFi network available");
                     connectionStatus.postValue(ConnectionStatus.CONNECTED);
                     discoverDevices();
                 }
@@ -166,6 +171,7 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                 @Override
                 public void onUnavailable() {
                     super.onUnavailable();
+                    Log.w(TAG, "WiFi network unavailable");
                     connectionStatus.postValue(ConnectionStatus.FAILED);
                 }
             };
@@ -205,8 +211,10 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                             discoverDevices();
                         } else {
                             connectionStatus.postValue(ConnectionStatus.FAILED);
+                            Log.w(TAG, "WiFi connection failed - not connected after timeout");
                         }
                     } catch (InterruptedException e) {
+                        Log.w(TAG, "WiFi connection interrupted", e);
                         connectionStatus.postValue(ConnectionStatus.FAILED);
                     }
                 }).start();
@@ -233,6 +241,7 @@ public class WifiSettingsViewModel extends AndroidViewModel {
      * This method scans the local network for potential ROS devices
      */
     public void discoverDevices() {
+        Log.d(TAG, "Starting device discovery");
         new Thread(() -> {
             List<String> devices = new ArrayList<>();
 
@@ -258,12 +267,14 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                         // Check common ROS ports: 11311 (ROS1 Master), 9090 (rosbridge)
                         if (Utils.isHostAvailable(testIp, ROS_MASTER_PORT, CONNECTION_TIMEOUT_MS) || 
                             Utils.isHostAvailable(testIp, ROSBRIDGE_PORT, CONNECTION_TIMEOUT_MS)) {
+                            Log.d(TAG, "Discovered ROS device at: " + testIp);
                             devices.add(testIp);
                         }
                     }
                 }
             }
 
+            Log.d(TAG, "Device discovery completed. Found " + devices.size() + " device(s)");
             discoveredDevices.postValue(devices);
         }).start();
     }
