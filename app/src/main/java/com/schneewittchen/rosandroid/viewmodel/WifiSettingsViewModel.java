@@ -37,6 +37,13 @@ public class WifiSettingsViewModel extends AndroidViewModel {
     private static final String KEY_WIFI_SSID = "wifi_ssid";
     private static final String KEY_WIFI_PASSWORD = "wifi_password";
     private static final String KEY_REMEMBER_PASSWORD = "remember_password";
+    
+    // Device discovery constants
+    private static final int MAX_SCAN_RANGE = 20;
+    private static final int ROS_MASTER_PORT = 11311;
+    private static final int ROSBRIDGE_PORT = 9090;
+    private static final int CONNECTION_TIMEOUT_MS = 500;
+    private static final int WIFI_CONNECTION_WAIT_MS = 3000;
 
     private final MutableLiveData<ConnectionStatus> connectionStatus;
     private final MutableLiveData<List<String>> discoveredDevices;
@@ -192,7 +199,7 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                 // Give it some time to connect
                 new Thread(() -> {
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(WIFI_CONNECTION_WAIT_MS);
                         if (isConnectedToWifi()) {
                             connectionStatus.postValue(ConnectionStatus.CONNECTED);
                             discoverDevices();
@@ -239,8 +246,8 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                     String networkPrefix = ipParts[0] + "." + ipParts[1] + "." + ipParts[2] + ".";
 
                     // Scan common ROS ports on local network
-                    // Scanning first 20 addresses for performance
-                    for (int i = 1; i <= 20; i++) {
+                    // Scanning addresses based on MAX_SCAN_RANGE for performance
+                    for (int i = 1; i <= MAX_SCAN_RANGE; i++) {
                         String testIp = networkPrefix + i;
                         
                         // Skip current device IP
@@ -249,8 +256,8 @@ public class WifiSettingsViewModel extends AndroidViewModel {
                         }
 
                         // Check common ROS ports: 11311 (ROS1 Master), 9090 (rosbridge)
-                        if (Utils.isHostAvailable(testIp, 11311, 500) || 
-                            Utils.isHostAvailable(testIp, 9090, 500)) {
+                        if (Utils.isHostAvailable(testIp, ROS_MASTER_PORT, CONNECTION_TIMEOUT_MS) || 
+                            Utils.isHostAvailable(testIp, ROSBRIDGE_PORT, CONNECTION_TIMEOUT_MS)) {
                             devices.add(testIp);
                         }
                     }
