@@ -80,4 +80,18 @@
         <item>roscore</item>
     </string-array>
 
+    <!-- WiFi Settings -->
+    <string name="wifi_settings_title">WiFi Connection Settings</string>
+    <string name="wifi_settings_description">Configure WiFi connection to discover ROS devices</string>
+    <string name="wifi_ssid_hint">WiFi Name (SSID)</string>
+    <string name="wifi_password_hint">WiFi Password</string>
+    <string name="remember_password">Remember Password</string>
+    <string name="wifi_connect_button">Next - Connect to WiFi</string>
+    <string name="connecting_to_wifi">Connecting to WiFi…</string>
+    <string name="wifi_connected">WiFi connected successfully</string>
+    <string name="wifi_connection_failed">WiFi connection failed</string>
+    <string name="discovering_devices">Discovering ROS devices…</string>
+    <string name="discovered_devices_title">Discovered Devices</string>
+    <string name="no_devices_found">No devices found on this network</string>
+
 </resources>
