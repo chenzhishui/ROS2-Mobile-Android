@@ -11,6 +11,7 @@ import com.thanosfisherman.wifiutils.wifiConnect.ConnectionErrorCode;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionSuccessListener;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manager class for WiFi connection operations
@@ -40,11 +41,11 @@ public class WifiConnectionManager {
     public void performPreConnectScan(String ssid, String password, WifiConnectCallback callback) {
         Log.d(TAG, "连接前先扫描WiFi网络...");
         
-        final boolean[] scanCompleted = {false};
+        final AtomicBoolean scanCompleted = new AtomicBoolean(false);
         
         // Setup timeout for scan operation
         scanTimeoutRunnable = () -> {
-            if (!scanCompleted[0]) {
+            if (scanCompleted.compareAndSet(false, true)) {
                 Log.e(TAG, "扫描超时");
                 callback.onConnectFailed("网络扫描超时，请重试");
             }
@@ -54,7 +55,10 @@ public class WifiConnectionManager {
         try {
             WifiUtils.withContext(context)
                     .scanWifi(results -> {
-                        scanCompleted[0] = true;
+                        if (!scanCompleted.compareAndSet(false, true)) {
+                            // Scan already completed (timeout occurred)
+                            return;
+                        }
                         timeoutHandler.removeCallbacks(scanTimeoutRunnable);
                         
                         if (results == null || results.isEmpty()) {
@@ -84,10 +88,11 @@ public class WifiConnectionManager {
                     })
                     .start();
         } catch (Exception e) {
-            scanCompleted[0] = true;
-            timeoutHandler.removeCallbacks(scanTimeoutRunnable);
-            Log.e(TAG, "扫描启动失败: " + e.getMessage(), e);
-            callback.onConnectFailed("网络扫描启动失败: " + e.getMessage());
+            if (scanCompleted.compareAndSet(false, true)) {
+                timeoutHandler.removeCallbacks(scanTimeoutRunnable);
+                Log.e(TAG, "扫描启动失败: " + e.getMessage(), e);
+                callback.onConnectFailed("网络扫描启动失败: " + e.getMessage());
+            }
         }
     }
 
@@ -142,10 +147,12 @@ public class WifiConnectionManager {
 
     /**
      * Clean up resources
+     * Thread-safe method to remove any pending timeout callbacks
      */
-    public void cleanup() {
+    public synchronized void cleanup() {
         if (timeoutHandler != null && scanTimeoutRunnable != null) {
             timeoutHandler.removeCallbacks(scanTimeoutRunnable);
+            scanTimeoutRunnable = null;
         }
     }
 }
