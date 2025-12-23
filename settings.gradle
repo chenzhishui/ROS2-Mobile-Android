@@ -34,6 +34,9 @@ dependencyResolutionManagement {
         maven {
             url "https://repository.springsource.com/maven/bundles/external"
         }
+        maven {
+            url 'https://jitpack.io'
+        }
     }
 }
 rootProject.name = "RosAndroid"
