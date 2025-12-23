@@ -10,7 +10,6 @@ import com.thanosfisherman.wifiutils.WifiUtils;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionErrorCode;
 import com.thanosfisherman.wifiutils.wifiConnect.ConnectionSuccessListener;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,6 +40,13 @@ public class WifiConnectionManager {
     public void performPreConnectScan(String ssid, String password, WifiConnectCallback callback) {
         Log.d(TAG, "连接前先扫描WiFi网络...");
         
+        // Clear any existing timeout before setting a new one
+        synchronized (this) {
+            if (scanTimeoutRunnable != null) {
+                timeoutHandler.removeCallbacks(scanTimeoutRunnable);
+            }
+        }
+        
         final AtomicBoolean scanCompleted = new AtomicBoolean(false);
         
         // Setup timeout for scan operation
@@ -69,7 +75,7 @@ public class WifiConnectionManager {
                         
                         boolean networkFound = false;
                         
-                        // 检查目标网络是否在扫描结果中
+                        // Check if target network exists in scan results
                         for (ScanResult result : results) {
                             if (result.SSID != null && result.SSID.equals(ssid)) {
                                 networkFound = true;
@@ -79,7 +85,7 @@ public class WifiConnectionManager {
                         
                         if (networkFound) {
                             Log.d(TAG, "找到目标网络: " + ssid);
-                            // 网络存在，执行连接
+                            // Network exists, proceed with connection
                             performConnect(ssid, password, callback);
                         } else {
                             Log.e(TAG, "未找到目标网络: " + ssid);
