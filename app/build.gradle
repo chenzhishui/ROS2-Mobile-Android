@@ -88,4 +88,7 @@ dependencies {
 
     // Color picker
     implementation "com.github.skydoves:colorpickerview:2.2.4"
+
+    // WiFi Utils
+    implementation 'com.github.thanosfisherman.wifiutils:wifiutils:1.6.6'
 }
